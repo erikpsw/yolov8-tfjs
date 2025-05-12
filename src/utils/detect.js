@@ -4,6 +4,16 @@ import labels from "./labels.json";
 
 const numClass = labels.length;
 
+const countPersons = (boxes, scores, classes) => {
+  let count = 0;
+  for (let i = 0; i < scores.length; i++) {
+    if (classes[i] === 0 && scores[i] > 0.5) { // 0通常是person类别，置信度>50%
+      count++;
+    }
+  }
+  return count;
+};
+
 /**
  * Preprocess image / frame before forwarded into the model
  * @param {HTMLVideoElement|HTMLImageElement} source
@@ -82,6 +92,11 @@ export const detect = async (source, model, canvasRef, callback = () => {}) => {
   const boxes_data = boxes.gather(nms, 0).dataSync(); // indexing boxes by nms index
   const scores_data = scores.gather(nms, 0).dataSync(); // indexing scores by nms index
   const classes_data = classes.gather(nms, 0).dataSync(); // indexing classes by nms index
+
+  const count = countPersons(boxes_data, scores_data, classes_data);
+  if (model.onCountChange) {
+    model.onCountChange(count);
+  }
 
   renderBoxes(canvasRef, boxes_data, scores_data, classes_data, [xRatio, yRatio]); // render boxes
   tf.dispose([res, transRes, boxes, scores, classes, nms]); // clear memory

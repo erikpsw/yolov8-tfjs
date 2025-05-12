@@ -53,7 +53,7 @@ const ButtonHandler = ({ imageRef, cameraRef, videoRef }) => {
           else alert(`Can't handle more than 1 stream\nCurrently streaming : ${streaming}`); // if streaming video or webcam
         }}
       >
-        {streaming === "image" ? "Close" : "Open"} Image
+        {streaming === "image" ? "关闭" : "打开"} 图片
       </button>
 
       {/* Video Handler */}
@@ -80,7 +80,7 @@ const ButtonHandler = ({ imageRef, cameraRef, videoRef }) => {
           else alert(`Can't handle more than 1 stream\nCurrently streaming : ${streaming}`); // if streaming webcam
         }}
       >
-        {streaming === "video" ? "Close" : "Open"} Video
+        {streaming === "video" ? "关闭" : "打开"} 视频
       </button>
 
       {/* Webcam Handler */}
@@ -102,7 +102,7 @@ const ButtonHandler = ({ imageRef, cameraRef, videoRef }) => {
           } else alert(`Can't handle more than 1 stream\nCurrently streaming : ${streaming}`); // if streaming video
         }}
       >
-        {streaming === "camera" ? "Close" : "Open"} Webcam
+        {streaming === "camera" ? "关闭" : "打开"} 摄像头
       </button>
     </div>
   );

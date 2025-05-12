@@ -8,9 +8,11 @@ import "./style/App.css";
 
 const App = () => {
   const [loading, setLoading] = useState({ loading: true, progress: 0 }); // loading state
+  const [personCount, setPersonCount] = useState(0); // 添加人数计数state
   const [model, setModel] = useState({
     net: null,
     inputShape: [1, 0, 0, 3],
+    onCountChange: (count) => setPersonCount(count), // 添加回调函数
   }); // init model & input shape
 
   // references
@@ -41,6 +43,7 @@ const App = () => {
       setModel({
         net: yolov8,
         inputShape: yolov8.inputs[0].shape,
+        onCountChange: (count) => setPersonCount(count), // 添加回调函数
       }); // set model & input shape
 
       tf.dispose([warmupResults, dummyInput]); // cleanup memory
@@ -49,14 +52,20 @@ const App = () => {
 
   return (
     <div className="App">
-      {loading.loading && <Loader>Loading model... {(loading.progress * 100).toFixed(2)}%</Loader>}
+      {loading.loading && <Loader>模型加载中... {(loading.progress * 100).toFixed(2)}%</Loader>}
       <div className="header">
-        <h1>📷 YOLOv8 Live Detection App</h1>
+        <h1>🎯 YOLO 实时人数检测系统</h1>
+        <div style={{ fontSize: '24px', color: '#2ecc71', margin: '10px 0' }}>
+          当前检测到的人数: {personCount} 人
+        </div>
         <p>
-          YOLOv8 live detection application on browser powered by <code>tensorflow.js</code>
+          基于 <code>tensorflow.js</code> 的浏览器端实时人数检测系统
         </p>
         <p>
-          Serving : <code className="code">{modelName}</code>
+          当前模型: <code className="code">{modelName}</code>
+        </p>
+        <p style={{ marginTop: '20px', fontSize: '16px', color: '#666' }}>
+          制作者: 潘世维
         </p>
       </div>
 
