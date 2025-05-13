@@ -4,10 +4,10 @@ import labels from "./labels.json";
 
 const numClass = labels.length;
 
-const countPersons = (boxes, scores, classes) => {
+const countPersons = (boxes, scores, classes, confThreshold = 0.5) => {
   let count = 0;
   for (let i = 0; i < scores.length; i++) {
-    if (classes[i] === 0 && scores[i] > 0.5) { // 0通常是person类别，置信度>50%
+    if (classes[i] === 0 && scores[i] > confThreshold) { // 0通常是person类别，使用传入的置信度阈值
       count++;
     }
   }
@@ -53,9 +53,10 @@ const preprocess = (source, modelWidth, modelHeight) => {
  * @param {HTMLImageElement|HTMLVideoElement} source
  * @param {tf.GraphModel} model loaded YOLOv8 tensorflow.js model
  * @param {HTMLCanvasElement} canvasRef canvas reference
+ * @param {Number} confThreshold confidence threshold
  * @param {VoidFunction} callback function to run after detection process
  */
-export const detect = async (source, model, canvasRef, callback = () => {}) => {
+export const detect = async (source, model, canvasRef, confThreshold = 0.25, callback = () => {}) => {
   const [modelWidth, modelHeight] = model.inputShape.slice(1, 3); // get model width and height
 
   tf.engine().startScope(); // start scoping tf engine
@@ -87,13 +88,13 @@ export const detect = async (source, model, canvasRef, callback = () => {}) => {
     return [rawScores.max(1), rawScores.argMax(1)];
   }); // get max scores and classes index
 
-  const nms = await tf.image.nonMaxSuppressionAsync(boxes, scores, 500, 0.45, 0.2); // NMS to filter boxes
+  const nms = await tf.image.nonMaxSuppressionAsync(boxes, scores, 500, 0.45, confThreshold); // NMS to filter boxes with confThreshold
 
   const boxes_data = boxes.gather(nms, 0).dataSync(); // indexing boxes by nms index
   const scores_data = scores.gather(nms, 0).dataSync(); // indexing scores by nms index
   const classes_data = classes.gather(nms, 0).dataSync(); // indexing classes by nms index
 
-  const count = countPersons(boxes_data, scores_data, classes_data);
+  const count = countPersons(boxes_data, scores_data, classes_data, confThreshold);
   if (model.onCountChange) {
     model.onCountChange(count);
   }
@@ -111,8 +112,9 @@ export const detect = async (source, model, canvasRef, callback = () => {}) => {
  * @param {HTMLVideoElement} vidSource video source
  * @param {tf.GraphModel} model loaded YOLOv8 tensorflow.js model
  * @param {HTMLCanvasElement} canvasRef canvas reference
+ * @param {Number} confThreshold confidence threshold
  */
-export const detectVideo = (vidSource, model, canvasRef) => {
+export const detectVideo = (vidSource, model, canvasRef, confThreshold = 0.25) => {
   /**
    * Function to detect every frame from video
    */
@@ -123,7 +125,7 @@ export const detectVideo = (vidSource, model, canvasRef) => {
       return; // handle if source is closed
     }
 
-    detect(vidSource, model, canvasRef, () => {
+    detect(vidSource, model, canvasRef, confThreshold, () => {
       requestAnimationFrame(detectFrame); // get another frame
     });
   };
