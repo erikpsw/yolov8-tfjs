@@ -183,6 +183,14 @@ const App = () => {
           >
             使用 yolov8n 模型
           </button>
+          <button 
+            onClick={() => switchModel("best")} 
+            className={modelName === "best" ? "active" : ""}
+            disabled={loading.loading}
+            style={{color: modelName === "best" ? "white" : undefined}}
+          >
+            使用人体检测模型
+          </button>
           <button
             onClick={() => switchModel(obb_model)}
             className={modelName === obb_model ? "active" : ""}

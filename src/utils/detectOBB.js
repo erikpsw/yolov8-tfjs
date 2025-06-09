@@ -92,23 +92,7 @@ const calculatePolygonArea = (polygon) => {
   return Math.abs(area) / 2;
 };
 
-// 判断点是否在多边形内部
-const isPointInPolygon = (point, polygon) => {
-  let inside = false;
-  const n = polygon.length;
-  
-  for (let i = 0, j = n - 1; i < n; j = i++) {
-    const xi = polygon[i].x, yi = polygon[i].y;
-    const xj = polygon[j].x, yj = polygon[j].y;
-    
-    const intersect = ((yi > point.y) !== (yj > point.y)) &&
-      (point.x < (xj - xi) * (point.y - yi) / (yj - yi) + xi);
-      
-    if (intersect) inside = !inside;
-  }
-  
-  return inside;
-};
+
 
 // 切割多边形 (Sutherland-Hodgman 算法)
 const clipPolygons = (subjectPolygon, clipPolygon) => {

@@ -64,6 +64,12 @@ export const detect = async (source, model, canvasRef, confThreshold = 0.25, cal
 
   const res = model.net.execute(input); // inference model
   const transRes = res.transpose([0, 2, 1]); // transpose result [b, det, n] => [b, n, det]
+  
+  // Dynamically determine the number of classes from the model output
+  const outputShape = transRes.shape;
+  const totalOutputs = outputShape[2]; // Total number of outputs per detection
+  const numClasses = totalOutputs - 4; // Subtract 4 for bbox coordinates (x, y, w, h)
+  
   const boxes = tf.tidy(() => {
     const w = transRes.slice([0, 0, 2], [-1, -1, 1]); // get width
     const h = transRes.slice([0, 0, 3], [-1, -1, 1]); // get height
@@ -83,9 +89,17 @@ export const detect = async (source, model, canvasRef, confThreshold = 0.25, cal
   }); // process boxes [y1, x1, y2, x2]
 
   const [scores, classes] = tf.tidy(() => {
-    // class scores
-    const rawScores = transRes.slice([0, 0, 4], [-1, -1, numClass]).squeeze(0); // #6 only squeeze axis 0 to handle only 1 class models
-    return [rawScores.max(1), rawScores.argMax(1)];
+    // class scores - handle both single and multi-class models
+    if (numClasses === 1) {
+      // Single class model (like the "best" model)
+      const rawScores = transRes.slice([0, 0, 4], [-1, -1, 1]).squeeze();
+      const classes = tf.zeros(rawScores.shape, 'int32'); // All detections are class 0 (person)
+      return [rawScores, classes];
+    } else {
+      // Multi-class model
+      const rawScores = transRes.slice([0, 0, 4], [-1, -1, numClasses]).squeeze(0);
+      return [rawScores.max(1), rawScores.argMax(1)];
+    }
   }); // get max scores and classes index
 
   const nms = await tf.image.nonMaxSuppressionAsync(boxes, scores, 500, 0.45, confThreshold); // NMS to filter boxes with confThreshold
